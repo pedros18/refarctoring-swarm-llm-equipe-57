@@ -7,6 +7,9 @@ __pycache__/
 venv/
 .env
 .DS_Store
+
+tpIGL/*
+
 .env.example
 # Dossier de travail temporaire (ne pas récupérer les modifications des étudiants ici)
 sandbox/
