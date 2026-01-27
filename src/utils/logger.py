@@ -11,8 +11,8 @@ class ActionType(str, Enum):
     """
     Énumération des types d'actions possibles pour standardiser l'analyse.
     """
-    ANALYSIS = "CODE_ANALYSIS"  # Audit, lecture, recherche de bugs
-    GENERATION = "CODE_GEN"     # Création de nouveau code/tests/docs
+    ANALYSIS = "ANALYSIS"       # Audit, lecture, recherche de bugs
+    GENERATION = "GENERATION"   # Création de nouveau code/tests/docs
     DEBUG = "DEBUG"             # Analyse d'erreurs d'exécution
     FIX = "FIX"                 # Application de correctifs
 
@@ -44,7 +44,7 @@ def log_experiment(agent_name: str, model_used: str, action: ActionType, details
     # --- 2. VALIDATION STRICTE DES DONNÉES (Prompts) ---
     # Pour l'analyse scientifique, nous avons absolument besoin du prompt et de la réponse
     # pour les actions impliquant une interaction majeure avec le code.
-    if action_str in [ActionType.ANALYSIS, ActionType.GENERATION, ActionType.DEBUG, ActionType.FIX]:
+    if action_str in [ActionType.ANALYSIS.value, ActionType.GENERATION.value, ActionType.DEBUG.value, ActionType.FIX.value]:
         required_keys = ["input_prompt", "output_response"]
         missing_keys = [key for key in required_keys if key not in details]
         
@@ -62,8 +62,8 @@ def log_experiment(agent_name: str, model_used: str, action: ActionType, details
     entry = {
         "id": str(uuid.uuid4()),  # ID unique pour éviter les doublons lors de la fusion des données
         "timestamp": datetime.now().isoformat(),
-        "agent": agent_name,
-        "model": model_used,
+        "agent_name": agent_name,
+        "model_used": model_used,
         "action": action_str,
         "details": details,
         "status": status
