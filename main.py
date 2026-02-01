@@ -48,7 +48,7 @@ exemples d'utilisation:
     #logger
     log_experiment(
         agent_name="System",
-        model_used="N/A",
+        model_used="google/gemini-2.0-flash-001",
         action=ActionType.ANALYSIS,
         details={
             "input_prompt": f"Démarrage du Refactoring Swarm sur {args.target_dir}",
@@ -71,7 +71,7 @@ exemples d'utilisation:
         #end
         log_experiment(
             agent_name="System",
-            model_used="N/A",
+            model_used="google/gemini-2.0-flash-001",
             action=ActionType.ANALYSIS,
             details={
                 "input_prompt": "Fin du Refactoring Swarm",
@@ -95,7 +95,7 @@ exemples d'utilisation:
         print(f"eror: {e}")
         log_experiment(
             agent_name="System",
-            model_used="N/A",
+            model_used="google/gemini-2.0-flash-001",
             action=ActionType.DEBUG,
             details={
                 "input_prompt": "Erreur fatale",

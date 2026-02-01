@@ -17,7 +17,7 @@ init(autoreset=True)
 
 class RefactoringOrchestrator:
     
-    MAX_ITERATIONS = 3  #nb max itiration slfhealing
+    MAX_ITERATIONS = 5  #nb max itiration slfhealing (increased for complex cases)
     
     def __init__(self, target_dir: str, model_name: str = "gemini-2.0-flash"):
         self.target_dir = os.path.abspath(target_dir)
@@ -164,13 +164,12 @@ class RefactoringOrchestrator:
         return "\n".join(errors)
     
     def _print_summary(self) -> None:
-        """Affiche le résumé du refactoring."""
         print(f"\n{Fore.CYAN}{'='*60}")
-        print(f"{Fore.CYAN}📊 RÉSUMÉ DU REFACTORING")
+        print(f"{Fore.CYAN} resume du refactoring")
         print(f"{Fore.CYAN}{'='*60}")
-        print(f"{Fore.WHITE}   Fichiers traités:  {self.stats['files_processed']}")
-        print(f"{Fore.GREEN}   Fichiers corrigés: {self.stats['files_fixed']}")
-        print(f"{Fore.RED}   Fichiers échoués:  {self.stats['files_failed']}")
+        print(f"{Fore.WHITE}   Fichiers traites:  {self.stats['files_processed']}")
+        print(f"{Fore.GREEN}   Fichiers corriges: {self.stats['files_fixed']}")
+        print(f"{Fore.RED}   Fichiers echoues:  {self.stats['files_failed']}")
         print(f"{Fore.YELLOW}   Total itérations:  {self.stats['total_iterations']}")
         
         if self.stats['files_failed'] == 0:
