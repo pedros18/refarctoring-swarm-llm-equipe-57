@@ -1,11 +1,51 @@
 [
-  {
-    "id": "9e82e9b0-9b43-4a78-af43-d5d5ef848a2f",
-    "timestamp": "2025-12-26T01:26:41.177789",
-    "agent": "System",
-    "model": "unknown",
-    "action": "STARTUP",
-    "details": "Target: ./sandbox",
-    "status": "INFO"
-  }
+    {
+        "id": "9e82e9b0-9b43-4a78-af43-d5d5ef848a2f",
+        "timestamp": "2025-12-26T01:26:41.177789",
+        "agent": "System",
+        "model": "unknown",
+        "action": "STARTUP",
+        "details": "Target: ./sandbox",
+        "status": "INFO"
+    },
+    {
+        "id": "e79ec7fe-0ede-4f19-963c-7a9465b0bbe9",
+        "timestamp": "2026-01-09T20:08:58.329379",
+        "agent": "TestAgent",
+        "model": "anthropic/claude-3-haiku",
+        "action": "CODE_ANALYSIS",
+        "details": {
+            "input_prompt": "Test prompt",
+            "output_response": "Test response",
+            "test_run": true
+        },
+        "status": "SUCCESS"
+    },
+    {
+        "id": "079b5fce-5b6b-4597-b38c-ddcbbcd5b65a",
+        "timestamp": "2026-01-09T20:10:56.589482",
+        "agent": "TestAgent",
+        "model": "anthropic/claude-3-haiku",
+        "action": "CODE_ANALYSIS",
+        "details": {
+            "input_prompt": "Test prompt",
+            "output_response": "Test response",
+            "test_run": true
+        },
+        "status": "SUCCESS"
+    },
+    {
+        "id": "cc6a4872-f10e-44d2-898f-0b6ad08e4bba",
+        "timestamp": "2026-01-09T20:11:55.163522",
+        "agent": "Auditor_Agent",
+        "model": "anthropic/claude-3.5-sonnet",
+        "action": "CODE_ANALYSIS",
+        "details": {
+            "file_analyzed": "sandbox/test_dataset/test_logic_bugs.py",
+            "input_prompt": "Analyze this Python file: test_logic_bugs.py\n\nCode:\n```python\n\"\"\"Module with logic bugs for testing\"\"\"\n\ndef find_maximum(numbers):\n    \"\"\"Find the maximum number in a list - BUT HAS A BUG\"\"\"\n    if not numbers:\n        return None\n    max_num = 0  # BUG: Should initialize with first element or -infinity\n    for num in numbers:\n        if num > max_num:\n            max_num = num\n    return max_num\n\ndef calculate_average(numbers):\n    \"\"\"Calculate average - BUT HAS A BUG\"\"\"\n    if not numbers:\n        return 0\n    total = sum(numbers)\n    return total / (len(numbers) + 1)  # BUG: Should divide by len(numbers), not len(numbers) + 1\n\ndef is_even(number):\n    \"\"\"Check if number is even - BUT HAS A BUG\"\"\"\n    return number % 2 == 1  # BUG: Should be == 0 for even numbers\n\ndef reverse_string(text):\n    \"\"\"Reverse a string - BUT HAS A BUG\"\"\"\n    reversed_text = \"\"\n    for i in range(len(text)):\n        reversed_text += text[i]  # BUG: Should be text[-(i+1)] or use text[::-1]\n    return reversed_text\n\n```\n\nProvide a detailed analysis of all issues found.",
+            "output_response": "ERROR: OpenRouter API error: Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 2000 tokens, but can only afford 1333. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'provider_name': None}}, 'user_id': 'user_3825X1PFqEIoTBJynpmDHAzcBZQ'}",
+            "error": "OpenRouter API error: Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 2000 tokens, but can only afford 1333. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account', 'code': 402, 'metadata': {'provider_name': None}}, 'user_id': 'user_3825X1PFqEIoTBJynpmDHAzcBZQ'}"
+        },
+        "status": "ERROR"
+    }
 ]
