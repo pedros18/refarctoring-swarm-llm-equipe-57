@@ -12,9 +12,9 @@ from typing import Dict, List, Tuple
 class LogValidator:
     """Validates the experiment_data.json file against project requirements"""
     
-    REQUIRED_FIELDS = ['agent_name', 'model_used', 'action', 'details', 'status', 'timestamp']
+    REQUIRED_FIELDS = ['id', 'timestamp', 'agent', 'model', 'action', 'details', 'status']
     REQUIRED_DETAIL_FIELDS = ['input_prompt', 'output_response']
-    VALID_ACTION_TYPES = ['ANALYSIS', 'GENERATION', 'DEBUG', 'FIX']
+    VALID_ACTION_TYPES = ['CODE_ANALYSIS', 'CODE_GEN', 'FIX', 'DEBUG']
     VALID_STATUSES = ['SUCCESS', 'FAILURE', 'ERROR']
     
     def __init__(self, log_file_path: str = 'logs/experiment_data.json'):
@@ -23,6 +23,8 @@ class LogValidator:
         self.warnings = []
         self.stats = {
             'total_entries': 0,
+            'valid_entries': 0,
+            'invalid_entries': 0,
             'by_action': {},
             'by_agent': {},
             'by_status': {},
@@ -66,9 +68,16 @@ class LogValidator:
         
         if len(data) == 0:
             self.warnings.append("⚠️  WARNING: No log entries found. System hasn't logged any actions yet.")
+        else:
+            print(f"Found {len(data)} log entries:")
+            print("-" * 50)
         
         for idx, entry in enumerate(data):
-            self._validate_entry(entry, idx)
+            entry_valid = self._validate_entry(entry, idx)
+            if entry_valid:
+                self.stats['valid_entries'] += 1
+            else:
+                self.stats['invalid_entries'] += 1
         
         # Generate report
         is_valid = len(self.errors) == 0
@@ -76,18 +85,23 @@ class LogValidator:
         
         return is_valid, report
     
-    def _validate_entry(self, entry: Dict, index: int):
-        """Validate a single log entry"""
+    def _validate_entry(self, entry: Dict, index: int) -> bool:
+        """Validate a single log entry, returns True if valid"""
+        
+        entry_errors = []
+        entry_warnings = []
         
         # Check required top-level fields
+        missing_fields = []
         for field in self.REQUIRED_FIELDS:
             if field not in entry:
-                self.errors.append(f"❌ Entry {index}: Missing required field '{field}'")
+                missing_fields.append(field)
+                entry_errors.append(f"❌ Entry {index}: Missing required field '{field}'")
         
         # Validate action type
         if 'action' in entry:
             if entry['action'] not in self.VALID_ACTION_TYPES:
-                self.errors.append(
+                entry_errors.append(
                     f"❌ Entry {index}: Invalid action type '{entry['action']}'. "
                     f"Must be one of {self.VALID_ACTION_TYPES}"
                 )
@@ -99,7 +113,7 @@ class LogValidator:
         # Validate status
         if 'status' in entry:
             if entry['status'] not in self.VALID_STATUSES:
-                self.warnings.append(
+                entry_warnings.append(
                     f"⚠️  Entry {index}: Unusual status '{entry['status']}'. "
                     f"Expected one of {self.VALID_STATUSES}"
                 )
@@ -107,38 +121,57 @@ class LogValidator:
             status = entry['status']
             self.stats['by_status'][status] = self.stats['by_status'].get(status, 0) + 1
         
-        # Validate agent_name
-        if 'agent_name' in entry:
-            agent = entry['agent_name']
+        # Validate agent field
+        if 'agent' in entry:
+            agent = entry['agent']
             self.stats['by_agent'][agent] = self.stats['by_agent'].get(agent, 0) + 1
         
         # Validate details field
         if 'details' not in entry:
-            self.errors.append(f"❌ Entry {index}: Missing 'details' field")
+            entry_errors.append(f"❌ Entry {index}: Missing 'details' field")
         elif not isinstance(entry['details'], dict):
-            self.errors.append(f"❌ Entry {index}: 'details' must be a dictionary")
+            entry_errors.append(f"❌ Entry {index}: 'details' must be a dictionary")
         else:
             details = entry['details']
             
             # Check MANDATORY fields: input_prompt and output_response
             if 'input_prompt' not in details:
-                self.errors.append(f"❌ Entry {index}: Missing MANDATORY field 'input_prompt' in details")
+                entry_errors.append(f"❌ Entry {index}: Missing MANDATORY field 'input_prompt' in details")
                 self.stats['missing_prompts'] += 1
             elif not details['input_prompt'] or details['input_prompt'].strip() == '':
-                self.warnings.append(f"⚠️  Entry {index}: 'input_prompt' is empty")
+                entry_warnings.append(f"⚠️  Entry {index}: 'input_prompt' is empty")
             
             if 'output_response' not in details:
-                self.errors.append(f"❌ Entry {index}: Missing MANDATORY field 'output_response' in details")
+                entry_errors.append(f"❌ Entry {index}: Missing MANDATORY field 'output_response' in details")
                 self.stats['missing_responses'] += 1
             elif not details['output_response'] or details['output_response'].strip() == '':
-                self.warnings.append(f"⚠️  Entry {index}: 'output_response' is empty")
+                entry_warnings.append(f"⚠️  Entry {index}: 'output_response' is empty")
         
         # Validate timestamp format
         if 'timestamp' in entry:
             try:
                 datetime.fromisoformat(entry['timestamp'].replace('Z', '+00:00'))
             except (ValueError, AttributeError):
-                self.warnings.append(f"⚠️  Entry {index}: Invalid timestamp format")
+                entry_warnings.append(f"⚠️  Entry {index}: Invalid timestamp format")
+        
+        # Show entry validation status
+        agent_name = entry.get('agent', 'Unknown')
+        action_type = entry.get('action', 'Unknown')
+        
+        if entry_errors:
+            print(f"❌ Entry {index}: {agent_name} → {action_type} → INVALID")
+            # Show first error for this entry
+            if entry_errors:
+                print(f"     Error: {entry_errors[0].replace(f'❌ Entry {index}: ', '')}")
+        else:
+            status = entry.get('status', 'Unknown')
+            print(f"✅ Entry {index}: {agent_name} → {action_type} → {status} → VALID")
+        
+        # Add to global errors/warnings
+        self.errors.extend(entry_errors)
+        self.warnings.extend(entry_warnings)
+        
+        return len(entry_errors) == 0
     
     def _generate_report(self) -> Dict:
         """Generate validation report"""
@@ -162,6 +195,8 @@ class LogValidator:
         
         print(f"\n📈 STATISTICS:")
         print(f"   Total Entries: {report['statistics']['total_entries']}")
+        print(f"   Valid Entries: {report['statistics']['valid_entries']}")
+        print(f"   Invalid Entries: {report['statistics']['invalid_entries']}")
         
         if report['statistics']['by_action']:
             print(f"\n   Actions Logged:")
@@ -180,16 +215,20 @@ class LogValidator:
         
         if report['errors']:
             print(f"\n❌ ERRORS ({len(report['errors'])}):")
-            for error in report['errors']:
+            for error in report['errors'][:10]:  # Show first 10 errors
                 print(f"   {error}")
+            if len(report['errors']) > 10:
+                print(f"   ... and {len(report['errors']) - 10} more errors")
         
         if report['warnings']:
             print(f"\n⚠️  WARNINGS ({len(report['warnings'])}):")
-            for warning in report['warnings']:
+            for warning in report['warnings'][:10]:  # Show first 10 warnings
                 print(f"   {warning}")
+            if len(report['warnings']) > 10:
+                print(f"   ... and {len(report['warnings']) - 10} more warnings")
         
-        if not report['errors'] and not report['warnings']:
-            print("\n✨ Perfect! No errors or warnings found.")
+        if report['statistics']['valid_entries'] == report['statistics']['total_entries']:
+            print("\n✨ Perfect! All entries are valid.")
         
         print("\n" + "="*60)
         
@@ -198,6 +237,10 @@ class LogValidator:
             quality_score = self._calculate_quality_score(report)
             print(f"\n📊 Estimated Data Quality Score: {quality_score}/30 points")
             print("   (This is 30% of your final grade!)")
+            
+            # Show tips if not perfect
+            if report['statistics']['invalid_entries'] > 0:
+                print(f"\n💡 Fix {report['statistics']['invalid_entries']} invalid entries to improve your score")
         
         print("="*60 + "\n")
     
@@ -224,6 +267,10 @@ class LogValidator:
         # Bonus for good coverage (if multiple action types logged)
         if len(report['statistics']['by_action']) >= 3:
             score += 2
+        
+        # Bonus for all entries valid
+        if report['statistics']['invalid_entries'] == 0 and report['statistics']['total_entries'] > 0:
+            score += 3
         
         return max(0, min(max_score, score))
 

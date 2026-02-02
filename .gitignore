@@ -11,6 +11,7 @@ venv/
 tpIGL/*
 
 .env.example
+validate_logs2.py
 # Dossier de travail temporaire (ne pas récupérer les modifications des étudiants ici)
 sandbox/
 
